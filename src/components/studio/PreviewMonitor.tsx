@@ -21,7 +21,7 @@ function monitorState(job: RenderJob | null) {
     return { scroll: 1, loaded: SECTIONS, scanning: false, recording: false, phase: RENDER_PHASES.length };
 
   const { index, local } = phaseAt(job.progress);
-  const key = RENDER_PHASES[index].key;
+  const key = RENDER_PHASES[index]?.key ?? "encode";
   let scroll = 0;
   let loaded = SECTIONS;
   if (key === "launch") loaded = 0;

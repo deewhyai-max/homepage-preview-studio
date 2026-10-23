@@ -19,8 +19,8 @@ export interface RenderJob {
   progress: number;
   createdAt: number;
   queuedUntil: number;
-  finishedAt?: number;
-  error?: string;
+  finishedAt?: number | undefined;
+  error?: string | undefined;
   estimatedSeconds: number;
 }
 

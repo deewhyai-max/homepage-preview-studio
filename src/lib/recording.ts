@@ -145,7 +145,7 @@ export function phaseAt(progress: number): { index: number; local: number } {
   const p = Math.min(1, Math.max(0, progress));
   let acc = 0;
   for (let i = 0; i < RENDER_PHASES.length; i++) {
-    const w = RENDER_PHASES[i].weight;
+    const w = RENDER_PHASES[i]?.weight ?? 0;
     if (p < acc + w || i === RENDER_PHASES.length - 1) {
       return { index: i, local: Math.min(1, (p - acc) / w) };
     }

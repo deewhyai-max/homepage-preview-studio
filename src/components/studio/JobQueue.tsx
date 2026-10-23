@@ -90,7 +90,7 @@ export function JobQueue({
                       />
                     </div>
                     <p className="mt-1.5 font-mono text-[11px] text-muted-foreground">
-                      {Math.round(job.progress * 100)}% · {RENDER_PHASES[phase.index].label}
+                      {Math.round(job.progress * 100)}% · {RENDER_PHASES[phase.index]?.label}
                     </p>
                   </div>
                 )}
