@@ -1,312 +1,139 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Info, Link2, Monitor, Smartphone } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { ArrowRight, Clapperboard, Monitor, Smartphone, Sparkles } from "lucide-react";
 
-import { JobQueue } from "@/components/studio/JobQueue";
-import { PreviewMonitor } from "@/components/studio/PreviewMonitor";
-import { Segmented } from "@/components/studio/Segmented";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { useRenderQueue } from "@/hooks/use-render-queue";
-import {
-  DEFAULT_SETTINGS,
-  OUTPUT_SIZE,
-  PAUSE_MAX,
-  PAUSE_MIN,
-  PAUSE_STEP,
-  clampPause,
-  estimateTypicalDuration,
-  toHomepageUrl,
-  type OutputFormat,
-  type RecordingSettings,
-  type ScrollSpeed,
-  type Viewport,
-} from "@/lib/recording";
+import { MotionLink } from "@/components/landing/MotionLink";
+import { Reveal } from "@/components/landing/Reveal";
+import { SceneControl } from "@/components/landing/SceneControl";
+import { SceneReel } from "@/components/landing/SceneReel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Preview Studio — Deewhy HQ" },
+      { title: "Deewhy HQ Preview Studio — Turn any homepage into a scroll-through video" },
       {
         name: "description",
         content:
-          "Paste a website link and turn its homepage into a smooth scroll-through MP4 in vertical 9:16 or widescreen 16:9.",
+          "Paste a link and Preview Studio records a public homepage as a polished scroll-through MP4 — vertical 9:16 or widescreen 16:9. It all runs in the cloud, no laptop power needed.",
       },
-      { property: "og:title", content: "Preview Studio — Deewhy HQ" },
+      {
+        property: "og:title",
+        content: "Deewhy HQ Preview Studio — Turn any homepage into a scroll-through video",
+      },
       {
         property: "og:description",
-        content: "Record any public homepage as a polished scroll-through video, ready to download as MP4.",
+        content:
+          "Paste a link and Preview Studio records a public homepage as a polished scroll-through MP4 — vertical 9:16 or widescreen 16:9.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Studio,
+  component: Landing,
 });
 
-function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+const BENEFITS = [
+  {
+    icon: Monitor,
+    title: "Pick your frame",
+    body: "Record the desktop view or the phone view — one site, both feeds covered.",
+  },
+  {
+    icon: Sparkles,
+    title: "Motion gets time to play",
+    body: "The hero holds and every section pauses, so 3D scenes and animations finish on camera.",
+  },
+  {
+    icon: Clapperboard,
+    title: "Download & post",
+    body: "A clean MP4 lands in your queue — straight to TikTok, Reels or YouTube from any device.",
+  },
+] as const;
+
+function Landing() {
   return (
-    <section className="rounded-2xl border bg-card p-5">
-      <header className="mb-4 flex items-center gap-3">
-        <span className="flex size-7 items-center justify-center rounded-full border border-primary/60 font-mono text-xs text-primary">
-          {String(n).padStart(2, "0")}
-        </span>
-        <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
-      </header>
-      {children}
-    </section>
-  );
-}
-
-function FieldLabel({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
-  return (
-    <div className="mb-2 flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-      <span>{children}</span>
-      {aside}
-    </div>
-  );
-}
-
-function Studio() {
-  const [url, setUrl] = useState("");
-  const [touched, setTouched] = useState(false);
-  const [settings, setSettings] = useState<RecordingSettings>(DEFAULT_SETTINGS);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { jobs, enqueue, retry, remove } = useRenderQueue();
-
-  const check = useMemo(() => toHomepageUrl(url), [url]);
-  const estimate = estimateTypicalDuration(settings);
-  const out = OUTPUT_SIZE[settings.format];
-
-  const renderingJob = jobs.find((j) => j.status === "rendering") ?? null;
-  const selectedJob = jobs.find((j) => j.id === selectedId) ?? null;
-  const monitorJob = selectedJob ?? renderingJob;
-
-  const update = <K extends keyof RecordingSettings>(key: K, value: RecordingSettings[K]) => {
-    setSettings((s) => ({ ...s, [key]: value }));
-    setSelectedId(null);
-  };
-
-  const start = () => {
-    setTouched(true);
-    if (!check.ok) return;
-    const id = enqueue(check.homepage, check.host, settings);
-    setSelectedId(id);
-  };
-
-  const counts = {
-    active: jobs.filter((j) => j.status === "queued" || j.status === "rendering").length,
-    done: jobs.filter((j) => j.status === "completed").length,
-  };
-
-  return (
-    <div className="min-h-screen">
-      <header className="border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="relative flex size-9 items-center justify-center rounded-lg bg-foreground">
-              <span className="size-3 rounded-full bg-primary" />
+    <div className="relative">
+      {/* top bar */}
+      <header className="fixed inset-x-0 top-0 z-50 border-b bg-background/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex size-8 items-center justify-center rounded-lg bg-foreground">
+              <span className="size-2.5 rounded-full bg-primary" />
             </div>
             <div className="leading-tight">
-              <p className="font-display text-base font-bold tracking-tight">Deewhy HQ</p>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="font-display text-sm font-bold tracking-tight">Deewhy HQ</p>
+              <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
                 Preview Studio
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
-            <span className="hidden rounded-full border px-3 py-1 text-muted-foreground sm:inline">
-              {counts.active} in progress · {counts.done} done
-            </span>
-            <span className="rounded-full border border-warning/50 px-3 py-1 text-warning">
-              Prototype · simulated renders
-            </span>
-          </div>
+          <MotionLink to="/studio" className="px-4 py-2 text-sm">
+            Open the studio <ArrowRight className="size-4" />
+          </MotionLink>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12">
-        <div className="mb-8 max-w-3xl">
-          <h1 className="font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
-            Turn any homepage into a <span className="text-primary">scroll-through</span> video.
-          </h1>
-          <p className="mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Paste a link, pick how it moves, and export an MP4 — the hero holds, each section
-            pauses, and animations get time to play.
-          </p>
-        </div>
+      <main className="pt-12">
+        {/* pinned scene 1 — camera-follow, parallax, changing headlines */}
+        <SceneReel />
 
-        <div className="grid gap-6 lg:grid-cols-[400px_1fr]">
-          <div className="grid content-start gap-4">
-            <Step n={1} title="Enter a website URL">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  start();
-                }}
-              >
-                <label htmlFor="site-url" className="sr-only">
-                  Website URL
-                </label>
-                <div className="relative">
-                  <Link2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="site-url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    onBlur={() => url && setTouched(true)}
-                    placeholder="deewhyhq.com"
-                    autoComplete="url"
-                    inputMode="url"
-                    className="h-12 bg-background pl-9 font-mono text-sm"
-                    aria-invalid={touched && !check.ok}
-                  />
-                </div>
-              </form>
-              <div className="mt-2 min-h-5 text-xs">
-                {check.ok ? (
-                  <p className="font-mono text-success">
-                    ✓ Will record {check.homepage}
-                    {check.trimmedPath && (
-                      <span className="block text-muted-foreground">
-                        Homepage only — the rest of the link is ignored.
-                      </span>
-                    )}
-                  </p>
-                ) : touched ? (
-                  <p className="text-destructive">{check.reason}</p>
-                ) : (
-                  <p className="text-muted-foreground">
-                    Public sites only. We load the homepage and wait for the hero to settle.
-                  </p>
-                )}
-              </div>
-            </Step>
+        {/* pinned scene 2 — horizontal scrub, counters, timecode */}
+        <SceneControl />
 
-            <Step n={2} title="Record the homepage">
-              <div className="grid gap-5">
-                <div>
-                  <FieldLabel>Viewport</FieldLabel>
-                  <Segmented<Viewport>
-                    label="Viewport"
-                    value={settings.viewport}
-                    onChange={(v) => update("viewport", v)}
-                    options={[
-                      { value: "desktop", label: <><Monitor className="size-4" /> Desktop</>, hint: "1440×900" },
-                      { value: "mobile", label: <><Smartphone className="size-4" /> Mobile</>, hint: "390×844" },
-                    ]}
-                  />
+        {/* scroll-triggered reveals */}
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+          <Reveal>
+            <h2 className="max-w-2xl font-display text-3xl font-bold leading-[1.05] tracking-tight text-balance sm:text-5xl">
+              Made for old laptops. <span className="text-primary">Made for new feeds.</span>
+            </h2>
+            <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+              The recording happens in a cloud browser, so a ten-year-old machine only needs a tab
+              open — the finished video comes out clean at 1080p.
+            </p>
+          </Reveal>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {BENEFITS.map((b, i) => (
+              <Reveal key={b.title} delay={i * 120}>
+                <div className="group h-full rounded-2xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-glow">
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-primary/15 text-primary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                    <b.icon className="size-5" />
+                  </span>
+                  <h3 className="mt-4 font-display text-lg font-semibold tracking-tight">{b.title}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{b.body}</p>
                 </div>
-                <div>
-                  <FieldLabel>Scroll speed</FieldLabel>
-                  <Segmented<ScrollSpeed>
-                    label="Scroll speed"
-                    value={settings.scrollSpeed}
-                    onChange={(v) => update("scrollSpeed", v)}
-                    options={[
-                      { value: "slow", label: "Slow" },
-                      { value: "normal", label: "Normal" },
-                      { value: "fast", label: "Fast" },
-                    ]}
-                  />
-                </div>
-                <div>
-                  <FieldLabel aside={<span className="text-foreground">{settings.pauseSeconds.toFixed(1)}s</span>}>
-                    Pause per section
-                  </FieldLabel>
-                  <Slider
-                    aria-label="Pause per section in seconds"
-                    min={PAUSE_MIN}
-                    max={PAUSE_MAX}
-                    step={PAUSE_STEP}
-                    value={[settings.pauseSeconds]}
-                    onValueChange={(vals) => update("pauseSeconds", clampPause(vals[0] ?? PAUSE_MIN))}
-                  />
-                  <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted-foreground">
-                    <span>{PAUSE_MIN}s</span>
-                    <span>{PAUSE_MAX}s</span>
-                  </div>
-                </div>
-                <p className="flex gap-2 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                  <Info className="mt-0.5 size-3.5 shrink-0" />
-                  Before recording, the browser does a quick pass down the page so lazy-loaded
-                  images and animations are ready on camera.
-                </p>
-              </div>
-            </Step>
+              </Reveal>
+            ))}
+          </div>
+        </section>
 
-            <Step n={3} title="Export the video">
-              <FieldLabel>Format</FieldLabel>
-              <Segmented<OutputFormat>
-                label="Output format"
-                value={settings.format}
-                onChange={(v) => update("format", v)}
-                options={[
-                  { value: "9:16", label: "Vertical 9:16", hint: "Reels · TikTok" },
-                  { value: "16:9", label: "Widescreen 16:9", hint: "YouTube · web" },
-                ]}
-              />
-              <dl className="mt-4 grid grid-cols-3 gap-2 font-mono text-[11px]">
-                <div className="rounded-lg border p-2">
-                  <dt className="text-muted-foreground">Length</dt>
-                  <dd className="mt-0.5 text-sm text-foreground">~{estimate}s</dd>
-                </div>
-                <div className="rounded-lg border p-2">
-                  <dt className="text-muted-foreground">Size</dt>
-                  <dd className="mt-0.5 text-sm text-foreground">
-                    {out.width}×{out.height}
-                  </dd>
-                </div>
-                <div className="rounded-lg border p-2">
-                  <dt className="text-muted-foreground">File</dt>
-                  <dd className="mt-0.5 text-sm text-foreground">MP4</dd>
-                </div>
-              </dl>
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Length is estimated for a typical six-section homepage.
+        {/* final CTA */}
+        <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 sm:pb-32">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-3xl border bg-card p-8 text-center sm:p-14">
+              <div className="pointer-events-none absolute left-1/2 top-[-40%] h-[70%] w-[70%] -translate-x-1/2 rounded-full bg-primary/20 blur-[90px]" />
+              <p className="relative font-mono text-[10px] uppercase tracking-[0.3em] text-primary sm:text-[11px]">
+                Free while in beta
               </p>
-              <Button
-                size="lg"
-                className="mt-4 h-12 w-full text-base font-semibold shadow-glow"
-                onClick={start}
-              >
-                Start recording <ArrowRight />
-              </Button>
-            </Step>
-          </div>
-
-          <div className="grid content-start gap-6">
-            <PreviewMonitor
-              settings={settings}
-              job={monitorJob}
-              host={check.ok ? check.host : null}
-            />
-
-            <section>
-              <div className="mb-3 flex items-end justify-between">
-                <h2 className="font-display text-xl font-semibold tracking-tight">Render queue</h2>
-                <p className="font-mono text-[11px] text-muted-foreground">
-                  Tip: a site ending in .invalid shows the Failed state
-                </p>
+              <h2 className="relative mt-3 font-display text-3xl font-bold leading-[1.05] tracking-tight text-balance sm:text-5xl">
+                Give every homepage a film crew.
+              </h2>
+              <p className="relative mx-auto mt-3 max-w-md text-sm text-muted-foreground sm:text-base">
+                Paste a link, pick your settings, and watch the reel take shape in the monitor.
+              </p>
+              <div className="relative mt-7 flex justify-center">
+                <MotionLink to="/studio">
+                  Open the studio <ArrowRight className="size-4" />
+                </MotionLink>
               </div>
-              <JobQueue
-                jobs={jobs}
-                selectedId={monitorJob?.id ?? null}
-                onSelect={setSelectedId}
-                onRetry={(id) => {
-                  retry(id);
-                  setSelectedId(id);
-                }}
-                onRemove={(id) => {
-                  remove(id);
-                  if (selectedId === id) setSelectedId(null);
-                }}
-              />
-            </section>
-          </div>
-        </div>
+            </div>
+          </Reveal>
+        </section>
       </main>
+
+      <footer className="border-t py-6">
+        <p className="mx-auto max-w-6xl px-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:px-6">
+          Deewhy HQ · Preview Studio · homepage recordings only
+        </p>
+      </footer>
     </div>
   );
 }
