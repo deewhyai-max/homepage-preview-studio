@@ -221,7 +221,7 @@ function Studio() {
                     max={PAUSE_MAX}
                     step={PAUSE_STEP}
                     value={[settings.pauseSeconds]}
-                    onValueChange={([v]) => update("pauseSeconds", clampPause(v))}
+                    onValueChange={(vals) => update("pauseSeconds", clampPause(vals[0] ?? PAUSE_MIN))}
                   />
                   <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted-foreground">
                     <span>{PAUSE_MIN}s</span>
