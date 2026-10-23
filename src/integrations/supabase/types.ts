@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      render_jobs: {
+        Row: {
+          aspect: string
+          created_at: string
+          error: string | null
+          id: string
+          pause_seconds: number
+          progress: number
+          scroll_speed: string
+          status: Database["public"]["Enums"]["render_status"]
+          updated_at: string
+          url: string
+          user_id: string
+          video_path: string | null
+          viewport: string
+        }
+        Insert: {
+          aspect?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          pause_seconds?: number
+          progress?: number
+          scroll_speed?: string
+          status?: Database["public"]["Enums"]["render_status"]
+          updated_at?: string
+          url: string
+          user_id?: string
+          video_path?: string | null
+          viewport?: string
+        }
+        Update: {
+          aspect?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          pause_seconds?: number
+          progress?: number
+          scroll_speed?: string
+          status?: Database["public"]["Enums"]["render_status"]
+          updated_at?: string
+          url?: string
+          user_id?: string
+          video_path?: string | null
+          viewport?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +70,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      render_status: "queued" | "rendering" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +197,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      render_status: ["queued", "rendering", "completed", "failed"],
+    },
   },
 } as const
