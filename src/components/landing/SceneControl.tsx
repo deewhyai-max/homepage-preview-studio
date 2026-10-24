@@ -72,7 +72,7 @@ export function SceneControl() {
   const shift = eased * overflow;
 
   return (
-    <section ref={ref} className="relative h-[320vh]" aria-label="What you control">
+    <section ref={ref} className="relative h-[170vh]" aria-label="What you control">
       <div className="sticky top-0 flex h-[100dvh] flex-col justify-center gap-5 overflow-hidden px-4 py-8 sm:gap-8 sm:px-6">
         {/* headline slides in horizontally — opposite motion to scene 1 */}
         <div
