@@ -1,9 +1,8 @@
-// ============= Full file contents (moved from src/routes/index.tsx) =============
-
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Info, Link2, Monitor, Smartphone } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 
+import { AccountMenu } from "@/components/auth/AccountMenu";
 import { JobQueue } from "@/components/studio/JobQueue";
 import { PreviewMonitor } from "@/components/studio/PreviewMonitor";
 import { Segmented } from "@/components/studio/Segmented";
@@ -26,7 +25,7 @@ import {
   type Viewport,
 } from "@/lib/recording";
 
-export const Route = createFileRoute("/studio")({
+export const Route = createFileRoute("/_authenticated/studio")({
   head: () => ({
     meta: [
       { title: "The Studio — Deewhy HQ Preview Studio" },
@@ -122,9 +121,10 @@ function Studio() {
             <span className="hidden rounded-full border px-3 py-1 text-muted-foreground sm:inline">
               {counts.active} in progress · {counts.done} done
             </span>
-            <span className="rounded-full border border-warning/50 px-3 py-1 text-warning">
+            <span className="hidden rounded-full border border-warning/50 px-3 py-1 text-warning md:inline">
               Prototype · simulated renders
             </span>
+            <AccountMenu />
           </div>
         </div>
       </header>

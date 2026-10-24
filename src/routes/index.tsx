@@ -1,5 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Clapperboard, Monitor, Smartphone, Sparkles } from "lucide-react";
+
+import { AccountMenu } from "@/components/auth/AccountMenu";
+import { MotionLink } from "@/components/landing/MotionLink";
+import { useSessionUser } from "@/lib/session";
 
 import { MotionLink } from "@/components/landing/MotionLink";
 import { Reveal } from "@/components/landing/Reveal";
@@ -66,9 +70,21 @@ function Landing() {
               </p>
             </div>
           </div>
-          <MotionLink to="/studio" className="px-4 py-2 text-sm">
-            Open the studio <ArrowRight className="size-4" />
-          </MotionLink>
+          {useSessionUser() ? (
+            <div className="flex items-center gap-3">
+              <Link
+                to="/studio"
+                className="hidden font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:text-foreground sm:inline"
+              >
+                Open the studio
+              </Link>
+              <AccountMenu />
+            </div>
+          ) : (
+            <MotionLink to="/auth" className="px-4 py-2 text-sm">
+              Sign in <ArrowRight className="size-4" />
+            </MotionLink>
+          )}
         </div>
       </header>
 
