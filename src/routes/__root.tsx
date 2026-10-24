@@ -128,9 +128,25 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  // Single app-wide session identity hook (src/lib/session.ts owns the one
+  // Supabase listener): re-render routes and refresh caches on sign in/out.
+  useEffect(() => {
+    return onSessionUserChange((user) => {
+      router.invalidate();
+      if (!user) {
+        void queryClient.cancelQueries();
+        queryClient.clear();
+      } else {
+        void queryClient.invalidateQueries();
+      }
+    });
+  }, [queryClient, router]);
 
   return (
     <QueryClientProvider client={queryClient}>
+      <Toaster position="top-center" />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

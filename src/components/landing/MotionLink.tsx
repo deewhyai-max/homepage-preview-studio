@@ -12,7 +12,7 @@ export function MotionLink({
   children,
   className,
 }: {
-  to: "/studio";
+  to: "/studio" | "/auth";
   children: ReactNode;
   className?: string;
 }) {
