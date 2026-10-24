@@ -10,5 +10,6 @@
 <!-- LOVABLE:END -->
 
 ## Project rules
+- The animated marketing landing lives at `src/routes/index.tsx` (scenes in `src/components/landing/`); the studio UI lives at `src/routes/studio.tsx` — keep them separate routes.
 - Recording rules (pause range, scroll speeds, output sizes, homepage-only URL reduction, length estimate) live as pure functions in `src/lib/recording.ts` with tests beside them; the UI and the future render backend must both use them so behavior stays in one place.
 - Render jobs are currently simulated client-side in `src/hooks/use-render-queue.ts` (prototype); the real cloud-browser recorder will replace that hook with server-created jobs and status polling, keeping the same Queued → Rendering → Completed/Failed states.
