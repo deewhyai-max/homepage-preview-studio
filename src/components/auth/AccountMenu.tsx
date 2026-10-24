@@ -124,7 +124,10 @@ export function AccountMenu({ className }: { className?: string }) {
             <Pencil className="size-4" /> Edit display name
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={() => void handleSignOut()}>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => void handleSignOut()}
+          >
             <LogOut className="size-4" /> Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
