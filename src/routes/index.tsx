@@ -5,7 +5,6 @@ import { AccountMenu } from "@/components/auth/AccountMenu";
 import { MotionLink } from "@/components/landing/MotionLink";
 import { useSessionUser } from "@/lib/session";
 
-import { MotionLink } from "@/components/landing/MotionLink";
 import { Reveal } from "@/components/landing/Reveal";
 import { SceneControl } from "@/components/landing/SceneControl";
 import { SceneReel } from "@/components/landing/SceneReel";
