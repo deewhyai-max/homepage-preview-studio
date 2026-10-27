@@ -13,9 +13,10 @@ import { sanitizeRedirect, useSessionUser } from "@/lib/session";
 import "@lovable.dev/cloud-auth-js/styles.css";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
+    const raw = search["redirect"];
+    return typeof raw === "string" ? { redirect: raw } : {};
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Deewhy HQ Preview Studio" },
