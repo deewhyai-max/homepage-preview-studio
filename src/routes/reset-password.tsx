@@ -75,7 +75,7 @@ function ResetPasswordPage() {
               <p className="text-sm text-muted-foreground">
                 This reset link isn't valid or has expired. Request a fresh one from the sign-in page.
               </p>
-              <Button className="mt-5" onClick={() => navigate({ to: "/auth", search: {} })}>
+              <Button className="mt-5" onClick={() => navigate({ to: "/auth" })}>
                 Back to sign in
               </Button>
             </div>
