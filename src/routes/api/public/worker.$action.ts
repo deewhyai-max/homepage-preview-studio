@@ -98,9 +98,6 @@ export const Route = createFileRoute("/api/public/worker/$action")({
         }
 
         const { jobId: id, workerId: wid } = parsed.data as { jobId: string; workerId: string };
-        const owned = () =>
-          db.from("render_jobs").update({}).eq("id", id).eq("worker_id", wid).eq("status", "rendering");
-
         if (action === "progress") {
           const body = parsed.data as z.infer<(typeof bodies)["progress"]>;
           const { data, error } = await db
@@ -128,7 +125,6 @@ export const Route = createFileRoute("/api/public/worker/$action")({
           .maybeSingle();
         if (jobErr) return json({ error: jobErr.message }, 500);
         if (!job) return json({ cancelled: true }, 409);
-        void owned;
 
         const path = `${job.user_id}/${job.id}.mp4`;
 
