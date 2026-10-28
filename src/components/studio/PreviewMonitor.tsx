@@ -1,6 +1,6 @@
 import { CheckCircle2, Globe, Lock, TriangleAlert } from "lucide-react";
 
-import type { RenderJob } from "@/hooks/use-render-queue";
+import type { RenderJob } from "@/hooks/use-render-jobs";
 import {
   OUTPUT_SIZE,
   RENDER_PHASES,
@@ -103,10 +103,12 @@ export function PreviewMonitor({
   settings,
   job,
   host,
+  videoUrl,
 }: {
   settings: RecordingSettings;
   job: RenderJob | null;
   host: string | null;
+  videoUrl?: string | null;
 }) {
   const s = job?.settings ?? settings;
   const out = OUTPUT_SIZE[s.format];
@@ -123,7 +125,7 @@ export function PreviewMonitor({
       ? 1
       : Math.min(1, Math.max(0, (job.progress - recStart) / (recEnd - recStart)))
     : 0;
-  const timecode = formatTimecode(recProgress * (job?.estimatedSeconds ?? 0));
+  const timecode = formatTimecode(recProgress * (job?.durationSeconds ?? job?.estimatedSeconds ?? 0));
 
   const shownHost = job?.host ?? host ?? "your-website.com";
   const phaseLabel =
@@ -220,11 +222,26 @@ export function PreviewMonitor({
           </div>
 
           {/* end-state overlays */}
-          {job?.status === "completed" && (
+          {job?.status === "completed" && videoUrl && (
+            <video
+              key={videoUrl}
+              src={videoUrl}
+              controls
+              playsInline
+              autoPlay
+              muted
+              loop
+              aria-label={`Recording of ${job.host}`}
+              className="absolute inset-0 h-full w-full bg-background object-contain"
+            />
+          )}
+          {job?.status === "completed" && !videoUrl && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
               <CheckCircle2 className="size-10 text-success" />
               <p className="font-display text-lg font-semibold">Ready to export</p>
-              <p className="font-mono text-xs text-muted-foreground">~{job.estimatedSeconds}s · {out.width}×{out.height}</p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {job.durationSeconds ?? `~${job.estimatedSeconds}`}s · {out.width}×{out.height}
+              </p>
             </div>
           )}
           {job?.status === "failed" && (

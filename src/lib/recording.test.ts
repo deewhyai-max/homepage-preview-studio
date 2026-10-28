@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MAX_ACTIVE_JOBS,
   OUTPUT_SIZE,
   clampPause,
   estimateDurationSeconds,
+  normalizeStops,
+  planDurationSeconds,
+  planScroll,
+  progressFor,
   toHomepageUrl,
 } from "./recording";
 
@@ -56,5 +61,70 @@ describe("video length estimate", () => {
         settings: { scrollSpeed: "normal", pauseSeconds: 2 },
       }),
     ).toBe(14.5);
+  });
+});
+
+describe("scroll choreography", () => {
+  const settings = { scrollSpeed: "normal" as const, pauseSeconds: 2 };
+
+  it("holds the hero first, then pauses at each section and ends at the bottom", () => {
+    const steps = planScroll({ pageHeightPx: 3900, viewportHeightPx: 900, sectionTops: [0, 1000, 2000], settings });
+    expect(steps).toEqual([
+      { kind: "hold", at: 0, seconds: 2.5 },
+      { kind: "scroll", from: 0, to: 1000, seconds: 2 },
+      { kind: "hold", at: 1000, seconds: 2 },
+      { kind: "scroll", from: 1000, to: 2000, seconds: 2 },
+      { kind: "hold", at: 2000, seconds: 2 },
+      { kind: "scroll", from: 2000, to: 3000, seconds: 2 },
+      { kind: "hold", at: 3000, seconds: 2 },
+    ]);
+    expect(planDurationSeconds(steps)).toBe(14.5);
+  });
+
+  it("uses the chosen pause, kept inside 2–3 seconds", () => {
+    const steps = planScroll({
+      pageHeightPx: 2000,
+      viewportHeightPx: 900,
+      sectionTops: [],
+      settings: { scrollSpeed: "fast", pauseSeconds: 9 },
+    });
+    expect(steps.filter((s) => s.kind === "hold").slice(1).every((s) => s.seconds === 3)).toBe(true);
+  });
+
+  it("merges sections that are closer than 60% of a screen", () => {
+    expect(normalizeStops({ sectionTops: [1000, 1200, 2500], maxScroll: 4000, viewportHeightPx: 1000 })).toEqual([
+      1000, 2500, 4000,
+    ]);
+  });
+
+  it("never pauses more than 8 times on long pages", () => {
+    const tops = Array.from({ length: 30 }, (_, i) => (i + 1) * 1000);
+    expect(normalizeStops({ sectionTops: tops, maxScroll: 30_000, viewportHeightPx: 900 }).length).toBe(8);
+  });
+
+  it("stops recording after 20,000px of scrolling", () => {
+    const steps = planScroll({ pageHeightPx: 90_000, viewportHeightPx: 900, sectionTops: [], settings });
+    const last = steps[steps.length - 1];
+    expect(last).toEqual({ kind: "hold", at: 20_000, seconds: 2 });
+  });
+
+  it("a page that fits on one screen only holds the hero", () => {
+    expect(planScroll({ pageHeightPx: 800, viewportHeightPx: 900, sectionTops: [], settings })).toEqual([
+      { kind: "hold", at: 0, seconds: 2.5 },
+    ]);
+  });
+});
+
+describe("render progress", () => {
+  it("maps each phase onto the overall progress bar", () => {
+    expect(progressFor("launch", 0)).toBe(0);
+    expect(progressFor("encode", 1)).toBeCloseTo(1, 5);
+    expect(progressFor("scroll", 0)).toBeCloseTo(0.48, 5);
+  });
+});
+
+describe("active recordings", () => {
+  it("allows 3 recordings waiting or rendering per person", () => {
+    expect(MAX_ACTIVE_JOBS).toBe(3);
   });
 });

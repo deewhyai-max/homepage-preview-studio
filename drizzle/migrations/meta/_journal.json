@@ -15,6 +15,13 @@
       "when": 1792805106309,
       "tag": "0001_create_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793162286853,
+      "tag": "0002_render_worker_pipeline",
+      "breakpoints": true
     }
   ]
 }

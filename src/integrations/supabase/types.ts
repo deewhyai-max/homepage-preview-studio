@@ -41,48 +41,78 @@ export type Database = {
       render_jobs: {
         Row: {
           aspect: string
+          attempts: number
           created_at: string
+          duration_seconds: number | null
           error: string | null
+          estimated_seconds: number | null
+          file_size_bytes: number | null
+          finished_at: string | null
+          heartbeat_at: string | null
+          host: string | null
           id: string
           pause_seconds: number
+          phase: string | null
           progress: number
           scroll_speed: string
+          started_at: string | null
           status: Database["public"]["Enums"]["render_status"]
           updated_at: string
           url: string
           user_id: string
           video_path: string | null
           viewport: string
+          worker_id: string | null
         }
         Insert: {
           aspect?: string
+          attempts?: number
           created_at?: string
+          duration_seconds?: number | null
           error?: string | null
+          estimated_seconds?: number | null
+          file_size_bytes?: number | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          host?: string | null
           id?: string
           pause_seconds?: number
+          phase?: string | null
           progress?: number
           scroll_speed?: string
+          started_at?: string | null
           status?: Database["public"]["Enums"]["render_status"]
           updated_at?: string
           url: string
           user_id?: string
           video_path?: string | null
           viewport?: string
+          worker_id?: string | null
         }
         Update: {
           aspect?: string
+          attempts?: number
           created_at?: string
+          duration_seconds?: number | null
           error?: string | null
+          estimated_seconds?: number | null
+          file_size_bytes?: number | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          host?: string | null
           id?: string
           pause_seconds?: number
+          phase?: string | null
           progress?: number
           scroll_speed?: string
+          started_at?: string | null
           status?: Database["public"]["Enums"]["render_status"]
           updated_at?: string
           url?: string
           user_id?: string
           video_path?: string | null
           viewport?: string
+          worker_id?: string | null
         }
         Relationships: []
       }
@@ -91,7 +121,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_render_job: {
+        Args: { p_worker_id: string }
+        Returns: {
+          aspect: string
+          attempts: number
+          created_at: string
+          duration_seconds: number | null
+          error: string | null
+          estimated_seconds: number | null
+          file_size_bytes: number | null
+          finished_at: string | null
+          heartbeat_at: string | null
+          host: string | null
+          id: string
+          pause_seconds: number
+          phase: string | null
+          progress: number
+          scroll_speed: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["render_status"]
+          updated_at: string
+          url: string
+          user_id: string
+          video_path: string | null
+          viewport: string
+          worker_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "render_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       render_status: "queued" | "rendering" | "completed" | "failed"
