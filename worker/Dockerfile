@@ -7,6 +7,8 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY src/lib/recording.ts ./src/lib/recording.ts
+# The shared rules file sits outside worker/; mark /app as ESM so Node loads its named exports.
+RUN echo '{"type":"module"}' > /app/package.json
 COPY worker/package.json worker/package-lock.json* ./worker/
 RUN cd worker && npm install --omit=dev --no-audit --no-fund && npm install tsx@4.20.6 --no-audit --no-fund
 COPY worker/src ./worker/src
