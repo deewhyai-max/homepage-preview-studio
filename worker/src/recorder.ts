@@ -92,6 +92,8 @@ export async function recordHomepage(opts: RecordOptions): Promise<RecordResult>
       reducedMotion: "no-preference",
       serviceWorkers: "block",
       acceptDownloads: false,
+      // Many big sites (Stripe, GitHub…) forbid inline scripts; our scroll helpers must still run.
+      bypassCSP: true,
     });
     // SSRF guard + homepage-only: block private hosts, and any top-level navigation away from the homepage.
     await context.route("**/*", (route) => {

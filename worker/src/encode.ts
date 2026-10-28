@@ -35,7 +35,9 @@ export function filterGraph(format: OutputFormat): string {
     `[0:v]fps=${OUTPUT_FPS},setsar=1,split=2[a][b]`,
     `[a]scale=${w4}:${h4}:force_original_aspect_ratio=increase,crop=${w4}:${h4},boxblur=18:2,scale=${W}:${H},eq=brightness=-0.12:saturation=1.1[bg]`,
     `[b]scale=${W}:${H}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,setsar=1[fg]`,
-    `[bg][fg]overlay=(W-w)/2:(H-h)/2,format=yuv420p[v]`,
+    // Screencast JPEGs are full-range; convert to standard TV-range BT.709 so phones and
+    // TikTok/Instagram show the same colours as the website.
+    `[bg][fg]overlay=(W-w)/2:(H-h)/2,scale=out_range=tv:out_color_matrix=bt709,format=yuv420p[v]`,
   ].join(";");
 }
 
@@ -57,6 +59,7 @@ export function encodeMp4(opts: {
     "-t", opts.durationSeconds.toFixed(3),
     "-c:v", "libx264", "-preset", config.x264Preset, "-crf", String(config.crf),
     "-profile:v", "high", "-level:v", "4.2", "-pix_fmt", "yuv420p",
+    "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
     "-r", String(OUTPUT_FPS), "-g", String(OUTPUT_FPS * 2),
     "-maxrate", "16M", "-bufsize", "32M",
     "-c:a", "aac", "-b:a", "128k",

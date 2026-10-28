@@ -64,7 +64,25 @@ export const PAGE_HELPERS = String.raw`
     return Math.round(h);
   }
 
+  // Catch-all for consent banners the known selectors miss: any fixed/sticky
+  // box whose text talks about cookies or consent (works in most languages).
+  const CONSENT_RE = /cookie|consent|gdpr|rgpd|dsgvo|datenschutz/i;
+  function hideConsent() {
+    let hidden = 0;
+    for (const el of document.querySelectorAll("body *")) {
+      const cs = getComputedStyle(el);
+      if (cs.position !== "fixed" && cs.position !== "sticky") continue;
+      if (cs.display === "none" || cs.visibility === "hidden") continue;
+      const text = (el.innerText || "").slice(0, 2000);
+      if (!text || text.length > 1500 || !CONSENT_RE.test(text)) continue;
+      el.style.setProperty("display", "none", "important");
+      hidden++;
+    }
+    return hidden;
+  }
+
   const api = {
+    hideConsent,
     el: null,
     scroller() { return this.el || (this.el = findScroller()); },
     pos() { const s = this.scroller(); return isDoc(s) ? scrollY : s.scrollTop; },
@@ -97,6 +115,7 @@ export const PAGE_HELPERS = String.raw`
         v.muted = true;
         try { const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch {}
       }
+      hideConsent();
       this.el = findScroller();
     },
     async prescan(o) {
@@ -144,6 +163,7 @@ export const PAGE_HELPERS = String.raw`
     },
     async runPlan(steps) {
       const ease = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
+      hideConsent(); // banners that only appeared during the pre-scroll
       this.to(0);
       for (const s of steps) {
         const start = performance.now();
