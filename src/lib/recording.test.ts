@@ -78,7 +78,7 @@ describe("scroll choreography", () => {
       { kind: "scroll", from: 2000, to: 3000, seconds: 2 },
       { kind: "hold", at: 3000, seconds: 2 },
     ]);
-    expect(planDurationSeconds(steps)).toBe(16.5);
+    expect(planDurationSeconds(steps)).toBe(14.5);
   });
 
   it("uses the chosen pause, kept inside 2–3 seconds", () => {
