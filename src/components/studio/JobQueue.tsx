@@ -1,4 +1,5 @@
-import { Download, Monitor, RotateCcw, Smartphone, X } from "lucide-react";
+import { Download, Loader2, Monitor, RotateCcw, Smartphone, X } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { RenderJob } from "@/hooks/use-render-jobs";
@@ -25,13 +26,16 @@ export function JobQueue({
   onSelect,
   onRetry,
   onRemove,
+  onDownload,
 }: {
   jobs: RenderJob[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onRetry: (id: string) => void;
-  onRemove: (id: string) => void;
+  onRetry: (job: RenderJob) => void;
+  onRemove: (job: RenderJob) => void;
+  onDownload: (job: RenderJob) => Promise<void>;
 }) {
+  const [downloading, setDownloading] = useState<string | null>(null);
   if (jobs.length === 0) {
     return (
       <div className="rounded-xl border border-dashed p-8 text-center">
@@ -79,7 +83,10 @@ export function JobQueue({
                   <span>{job.settings.format}</span>
                   <span>{job.settings.scrollSpeed} scroll</span>
                   <span>{job.settings.pauseSeconds}s pauses</span>
-                  <span>~{job.estimatedSeconds}s</span>
+                  <span>
+                    {job.durationSeconds != null ? `${job.durationSeconds}s` : `~${job.estimatedSeconds}s`}
+                  </span>
+                  {job.fileSizeBytes != null && <span>{(job.fileSizeBytes / 1024 ** 2).toFixed(1)} MB</span>}
                 </div>
                 {job.status === "rendering" && (
                   <div className="mt-3">
@@ -94,23 +101,35 @@ export function JobQueue({
                     </p>
                   </div>
                 )}
+                {job.status === "queued" && (
+                  <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                    Waiting for the next free recorder…
+                  </p>
+                )}
                 {job.status === "failed" && (
                   <p className="mt-2 text-sm text-destructive">{job.error}</p>
                 )}
               </div>
 
               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                {job.status === "completed" && (
+                {job.status === "completed" && job.videoPath && (
                   <Button
                     size="sm"
-                    disabled
-                    title="Downloads switch on once the rendering backend is connected"
+                    disabled={downloading === job.id}
+                    onClick={async () => {
+                      setDownloading(job.id);
+                      try {
+                        await onDownload(job);
+                      } finally {
+                        setDownloading(null);
+                      }
+                    }}
                   >
-                    <Download /> Download MP4
+                    {downloading === job.id ? <Loader2 className="animate-spin" /> : <Download />} Download MP4
                   </Button>
                 )}
                 {job.status === "failed" && (
-                  <Button size="sm" variant="secondary" onClick={() => onRetry(job.id)}>
+                  <Button size="sm" variant="secondary" onClick={() => onRetry(job)}>
                     <RotateCcw /> Retry
                   </Button>
                 )}
@@ -119,18 +138,13 @@ export function JobQueue({
                     size="icon"
                     variant="ghost"
                     aria-label={`Remove ${job.host}`}
-                    onClick={() => onRemove(job.id)}
+                    onClick={() => onRemove(job)}
                   >
                     <X />
                   </Button>
                 )}
               </div>
             </div>
-            {job.status === "completed" && (
-              <p className="mt-1.5 px-1 font-mono text-[10px] text-muted-foreground">
-                Prototype run — the MP4 file arrives with the real cloud recorder.
-              </p>
-            )}
           </li>
         );
       })}
