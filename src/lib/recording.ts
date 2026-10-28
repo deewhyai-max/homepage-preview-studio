@@ -161,3 +161,97 @@ export function formatTimecode(seconds: number): string {
   const ff = Math.floor((s % 1) * 30);
   return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}:${String(ff).padStart(2, "0")}`;
 }
+
+/** Weighted overall progress (0–1) for a phase and how far through it we are. */
+export function progressFor(key: PhaseKey, local: number): number {
+  const phase = RENDER_PHASES.find((p) => p.key === key);
+  const w = phase?.weight ?? 0;
+  const l = Math.min(1, Math.max(0, local));
+  return Math.min(1, phaseStart(key) + w * l);
+}
+
+// ---------------------------------------------------------------------------
+// Scroll choreography — the recorder executes exactly this plan.
+
+/** Most section pauses a single video gets (long pages are thinned evenly). */
+export const MAX_SECTION_STOPS = 8;
+/** Never record more than this much scroll travel (guards infinite feeds). */
+export const MAX_SCROLL_PX = 20_000;
+/** Section tops closer than this share of a viewport are treated as one stop. */
+export const MIN_STOP_GAP_VIEWPORTS = 0.6;
+/** A signed-in person can have this many recordings waiting or rendering. */
+export const MAX_ACTIVE_JOBS = 3;
+/** Frames per second of the exported MP4. */
+export const OUTPUT_FPS = 30;
+
+export type ScrollStep =
+  | { kind: "hold"; at: number; seconds: number }
+  | { kind: "scroll"; from: number; to: number; seconds: number };
+
+/** Turn measured section tops into the ordered scroll stops the video pauses at. */
+export function normalizeStops(opts: {
+  sectionTops: number[];
+  maxScroll: number;
+  viewportHeightPx: number;
+}): number[] {
+  const { maxScroll, viewportHeightPx } = opts;
+  if (maxScroll <= 0) return [];
+  const gap = viewportHeightPx * MIN_STOP_GAP_VIEWPORTS;
+  const raw = opts.sectionTops
+    .filter((t) => Number.isFinite(t))
+    .map((t) => Math.round(Math.min(maxScroll, Math.max(0, t))))
+    .filter((t) => t >= gap)
+    .sort((a, b) => a - b);
+
+  let stops: number[] = [];
+  for (const t of raw) {
+    const last = stops[stops.length - 1];
+    if (last === undefined || t - last >= gap) stops.push(t);
+  }
+  // No usable sections found: pause roughly once per screen.
+  if (stops.length === 0) {
+    const n = Math.max(1, Math.min(MAX_SECTION_STOPS, Math.round(maxScroll / viewportHeightPx)));
+    stops = Array.from({ length: n }, (_, i) => Math.round(((i + 1) / n) * maxScroll));
+  }
+  // The video always ends resting on the bottom of the page.
+  const last = stops[stops.length - 1] ?? 0;
+  if (maxScroll - last < gap) stops[stops.length - 1] = maxScroll;
+  else stops.push(maxScroll);
+
+  if (stops.length > MAX_SECTION_STOPS) {
+    const keep: number[] = [];
+    for (let i = 1; i <= MAX_SECTION_STOPS; i++) {
+      const idx = Math.round((i / MAX_SECTION_STOPS) * (stops.length - 1));
+      const v = stops[idx];
+      if (v !== undefined && keep[keep.length - 1] !== v) keep.push(v);
+    }
+    stops = keep;
+  }
+  return stops;
+}
+
+/** Hero hold, then scroll → pause for every section stop down to the bottom. */
+export function planScroll(opts: {
+  pageHeightPx: number;
+  viewportHeightPx: number;
+  sectionTops: number[];
+  settings: Pick<RecordingSettings, "scrollSpeed" | "pauseSeconds">;
+}): ScrollStep[] {
+  const maxScroll = Math.min(MAX_SCROLL_PX, Math.max(0, opts.pageHeightPx - opts.viewportHeightPx));
+  const pause = clampPause(opts.settings.pauseSeconds);
+  const speed = SCROLL_SPEED_PX_PER_SEC[opts.settings.scrollSpeed];
+  const steps: ScrollStep[] = [{ kind: "hold", at: 0, seconds: HERO_HOLD_SECONDS }];
+  let pos = 0;
+  const stops = normalizeStops({ sectionTops: opts.sectionTops, maxScroll, viewportHeightPx: opts.viewportHeightPx });
+  for (const stop of stops) {
+    const seconds = Math.round(((stop - pos) / speed) * 1000) / 1000;
+    steps.push({ kind: "scroll", from: pos, to: stop, seconds });
+    steps.push({ kind: "hold", at: stop, seconds: pause });
+    pos = stop;
+  }
+  return steps;
+}
+
+export function planDurationSeconds(steps: ScrollStep[]): number {
+  return Math.round(steps.reduce((sum, s) => sum + s.seconds, 0) * 1000) / 1000;
+}
