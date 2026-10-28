@@ -57,7 +57,7 @@ export type HomepageCheck =
   | { ok: true; homepage: string; host: string; trimmedPath: boolean }
   | { ok: false; reason: string };
 
-function isPrivateHost(host: string): boolean {
+export function isPrivateHost(host: string): boolean {
   if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) return true;
   if (host === "0.0.0.0") return true;
   const m = host.match(/^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
