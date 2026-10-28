@@ -1,7 +1,7 @@
 import { Download, Monitor, RotateCcw, Smartphone, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { RenderJob } from "@/hooks/use-render-queue";
+import type { RenderJob } from "@/hooks/use-render-jobs";
 import { RENDER_PHASES, phaseAt, type JobStatus } from "@/lib/recording";
 import { cn } from "@/lib/utils";
 

@@ -1,6 +1,6 @@
 import { CheckCircle2, Globe, Lock, TriangleAlert } from "lucide-react";
 
-import type { RenderJob } from "@/hooks/use-render-queue";
+import type { RenderJob } from "@/hooks/use-render-jobs";
 import {
   OUTPUT_SIZE,
   RENDER_PHASES,
