@@ -188,7 +188,7 @@ export async function recordHomepage(opts: RecordOptions): Promise<RecordResult>
         clearInterval(tick);
       }
     });
-    if (frames.length < 2) throw new JobError("The page didn't produce any frames to record.", true);
+    if (frames.length < 1) throw new JobError("The page didn't produce any frames to record.", true);
     report("scroll", 1);
     await browser.close().catch(() => {});
     browser = undefined;
@@ -246,7 +246,10 @@ async function captureWhile(
     maxHeight: vp.height * scale,
     everyNthFrame: 1,
   });
-  await sleep(400); // first frame of the hero
+  await sleep(400);
+  // Screencast only fires on repaint, so seed the video with a real still of the hero.
+  const seed = path.join(dir, "seed.jpg");
+  await page.screenshot({ path: seed, type: "jpeg", quality: 92 });
   const start = Date.now() / 1000;
   await run();
   const end = Date.now() / 1000;
@@ -258,7 +261,7 @@ async function captureWhile(
   // Timeline from start→end; the last frame before start opens the video.
   const before = raw.filter((f) => f.ts <= start);
   const during = raw.filter((f) => f.ts > start && f.ts <= end);
-  const seq = [...(before.length ? [{ file: before[before.length - 1]!.file, ts: start }] : []), ...during];
+  const seq = [{ file: before.length ? before[before.length - 1]!.file : seed, ts: start }, ...during];
   const out: TimedFrame[] = [];
   for (let i = 0; i < seq.length; i++) {
     const cur = seq[i]!;
