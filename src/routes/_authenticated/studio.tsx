@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Info, Link2, Monitor, Smartphone } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { JobQueue } from "@/components/studio/JobQueue";
@@ -9,7 +11,12 @@ import { Segmented } from "@/components/studio/Segmented";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { useRenderQueue } from "@/hooks/use-render-queue";
+import {
+  friendlyJobError,
+  signedVideoUrl,
+  useRenderJobs,
+  type RenderJob,
+} from "@/hooks/use-render-jobs";
 import {
   DEFAULT_SETTINGS,
   OUTPUT_SIZE,
@@ -75,7 +82,7 @@ function Studio() {
   const [touched, setTouched] = useState(false);
   const [settings, setSettings] = useState<RecordingSettings>(DEFAULT_SETTINGS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { jobs, enqueue, retry, remove } = useRenderQueue();
+  const { jobs, loading, creating, enqueue, retry, remove } = useRenderJobs();
 
   const check = useMemo(() => toHomepageUrl(url), [url]);
   const estimate = estimateTypicalDuration(settings);
@@ -85,16 +92,43 @@ function Studio() {
   const selectedJob = jobs.find((j) => j.id === selectedId) ?? null;
   const monitorJob = selectedJob ?? renderingJob;
 
+  const playable = monitorJob?.status === "completed" && monitorJob.videoPath ? monitorJob : null;
+  const { data: videoUrl } = useQuery({
+    queryKey: ["recording-url", playable?.videoPath],
+    enabled: !!playable,
+    staleTime: 50 * 60 * 1000,
+    queryFn: () => signedVideoUrl(playable as RenderJob, false),
+  });
+
   const update = <K extends keyof RecordingSettings>(key: K, value: RecordingSettings[K]) => {
     setSettings((s) => ({ ...s, [key]: value }));
     setSelectedId(null);
   };
 
-  const start = () => {
+  const start = async () => {
     setTouched(true);
-    if (!check.ok) return;
-    const id = enqueue(check.homepage, check.host, settings);
-    setSelectedId(id);
+    if (!check.ok || creating) return;
+    try {
+      const id = await enqueue(check.homepage, check.host, settings);
+      setSelectedId(id);
+      toast.success("Recording queued", { description: `We'll record ${check.host} and let you download the MP4.` });
+    } catch (err) {
+      toast.error(friendlyJobError(err));
+    }
+  };
+
+  const download = async (job: RenderJob) => {
+    try {
+      const href = await signedVideoUrl(job, true);
+      const a = document.createElement("a");
+      a.href = href;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch {
+      toast.error("Couldn't get the download link. Please try again.");
+    }
   };
 
   const counts = {
@@ -121,9 +155,6 @@ function Studio() {
             <span className="hidden rounded-full border px-3 py-1 text-muted-foreground sm:inline">
               {counts.active} in progress · {counts.done} done
             </span>
-            <span className="hidden rounded-full border border-warning/50 px-3 py-1 text-warning md:inline">
-              Prototype · simulated renders
-            </span>
             <AccountMenu />
           </div>
         </div>
@@ -146,7 +177,7 @@ function Studio() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  start();
+                  void start();
                 }}
               >
                 <label htmlFor="site-url" className="sr-only">
@@ -272,9 +303,10 @@ function Studio() {
               <Button
                 size="lg"
                 className="mt-4 h-12 w-full text-base font-semibold shadow-glow"
-                onClick={start}
+                onClick={() => void start()}
+                disabled={creating}
               >
-                Start recording <ArrowRight />
+                {creating ? "Queuing…" : "Start recording"} <ArrowRight />
               </Button>
             </Step>
           </div>
@@ -284,26 +316,35 @@ function Studio() {
               settings={settings}
               job={monitorJob}
               host={check.ok ? check.host : null}
+              videoUrl={playable ? (videoUrl ?? null) : null}
             />
 
             <section>
               <div className="mb-3 flex items-end justify-between">
                 <h2 className="font-display text-xl font-semibold tracking-tight">Render queue</h2>
                 <p className="font-mono text-[11px] text-muted-foreground">
-                  Tip: a site ending in .invalid shows the Failed state
+                  {loading ? "Loading your recordings…" : "Finished videos are kept for you here"}
                 </p>
               </div>
               <JobQueue
                 jobs={jobs}
                 selectedId={monitorJob?.id ?? null}
                 onSelect={setSelectedId}
-                onRetry={(id) => {
-                  retry(id);
-                  setSelectedId(id);
+                onDownload={download}
+                onRetry={async (job) => {
+                  try {
+                    setSelectedId(await retry(job));
+                  } catch (err) {
+                    toast.error(friendlyJobError(err));
+                  }
                 }}
-                onRemove={(id) => {
-                  remove(id);
-                  if (selectedId === id) setSelectedId(null);
+                onRemove={async (job) => {
+                  if (selectedId === job.id) setSelectedId(null);
+                  try {
+                    await remove(job);
+                  } catch {
+                    toast.error("Couldn't remove that recording. Please try again.");
+                  }
                 }}
               />
             </section>
