@@ -99,6 +99,35 @@ function MockSection({ i, mobile, loaded }: { i: number; mobile: boolean; loaded
   );
 }
 
+/** Finished recording shown inside a clean laptop lockup on white. */
+function LaptopLockup({ videoUrl, host }: { videoUrl: string; host: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-white p-[3.5%]">
+      <div className="w-[88%]">
+        <div className="rounded-xl bg-[#15181d] p-[0.9%] shadow-[0_24px_50px_-22px_rgba(10,15,30,0.45)]">
+          <video
+            key={videoUrl}
+            src={videoUrl}
+            controls
+            playsInline
+            autoPlay
+            muted
+            loop
+            aria-label={`Recording of ${host}`}
+            className="block w-full rounded-[4px] bg-black"
+          />
+        </div>
+        <div
+          className="relative mx-auto w-[108%] -translate-x-px rounded-b-lg bg-gradient-to-b from-[#eceef2] via-[#d4d7dc] to-[#b3b8c0]"
+          style={{ aspectRatio: "30 / 1" }}
+        >
+          <div className="absolute left-1/2 top-0 h-1/2 w-[14%] -translate-x-1/2 rounded-b-md bg-[#a9aeb6]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PreviewMonitor({
   settings,
   job,
@@ -235,7 +264,15 @@ export function PreviewMonitor({
             </div>
           )}
           {job?.status === "failed" && (
-      </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80 p-6 text-center backdrop-blur-sm">
+              <TriangleAlert className="size-10 text-destructive" />
+              <p className="font-display text-lg font-semibold">Couldn't record this homepage</p>
+              <p className="max-w-xs text-sm text-muted-foreground">{job.error}</p>
+            </div>
+          )}
+          </>
+          )}
+        </div>
 
       {/* phase timeline */}
       <div className="mt-4">
