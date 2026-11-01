@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DEFAULT_SETTINGS,
   MAX_ACTIVE_JOBS,
   OUTPUT_SIZE,
   clampPause,
@@ -11,6 +12,14 @@ import {
   progressFor,
   toHomepageUrl,
 } from "./recording";
+
+describe("export lock", () => {
+  it("records desktop widescreen 16:9 only — 1920×1080 for laptop mockups", () => {
+    expect(DEFAULT_SETTINGS.viewport).toBe("desktop");
+    expect(DEFAULT_SETTINGS.format).toBe("16:9");
+    expect(OUTPUT_SIZE["16:9"]).toEqual({ width: 1920, height: 1080 });
+  });
+});
 
 describe("section pauses", () => {
   it("never goes below 2 seconds", () => {

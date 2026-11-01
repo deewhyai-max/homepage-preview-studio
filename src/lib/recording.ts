@@ -40,11 +40,15 @@ export const TYPICAL_HOMEPAGE = {
   heightPx: { desktop: 6200, mobile: 9800 } as Record<Viewport, number>,
 };
 
+/** The studio exports one format only — desktop widescreen, made for laptop mockups. */
+export const ONLY_VIEWPORT: Viewport = "desktop";
+export const ONLY_FORMAT: OutputFormat = "16:9";
+
 export const DEFAULT_SETTINGS: RecordingSettings = {
   scrollSpeed: "normal",
   pauseSeconds: 2.5,
-  viewport: "desktop",
-  format: "16:9",
+  viewport: ONLY_VIEWPORT,
+  format: ONLY_FORMAT,
 };
 
 export function clampPause(seconds: number): number {
