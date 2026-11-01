@@ -273,6 +273,7 @@ export function PreviewMonitor({
           </>
           )}
         </div>
+      </div>
 
       {/* phase timeline */}
       <div className="mt-4">
