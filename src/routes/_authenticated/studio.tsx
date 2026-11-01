@@ -273,16 +273,20 @@ function Studio() {
             </Step>
 
             <Step n={3} title="Export the video">
-              <FieldLabel>Format</FieldLabel>
-              <Segmented<OutputFormat>
-                label="Output format"
-                value={settings.format}
-                onChange={(v) => update("format", v)}
-                options={[
-                  { value: "9:16", label: "Vertical 9:16", hint: "Reels · TikTok" },
-                  { value: "16:9", label: "Widescreen 16:9", hint: "YouTube · web" },
-                ]}
-              />
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full border border-primary/60 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-primary">
+                  Widescreen 16:9
+                </span>
+                <span className="rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  1920×1080
+                </span>
+                <span className="rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Desktop 1440×900
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                One clean format — full-frame widescreen that drops straight into laptop mockups.
+              </p>
               <dl className="mt-4 grid grid-cols-3 gap-2 font-mono text-[11px]">
                 <div className="rounded-lg border p-2">
                   <dt className="text-muted-foreground">Length</dt>
@@ -290,9 +294,7 @@ function Studio() {
                 </div>
                 <div className="rounded-lg border p-2">
                   <dt className="text-muted-foreground">Size</dt>
-                  <dd className="mt-0.5 text-sm text-foreground">
-                    {out.width}×{out.height}
-                  </dd>
+                  <dd className="mt-0.5 text-sm text-foreground">1920×1080</dd>
                 </div>
                 <div className="rounded-lg border p-2">
                   <dt className="text-muted-foreground">File</dt>
