@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Info, Link2, Monitor, Smartphone } from "lucide-react";
+import { ArrowRight, Info, Link2 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,19 +17,17 @@ import {
   useRenderJobs,
   type RenderJob,
 } from "@/hooks/use-render-jobs";
+import { laptopFrameFileName, renderLaptopFramePng } from "@/lib/laptop-frame";
 import {
   DEFAULT_SETTINGS,
-  OUTPUT_SIZE,
   PAUSE_MAX,
   PAUSE_MIN,
   PAUSE_STEP,
   clampPause,
   estimateTypicalDuration,
   toHomepageUrl,
-  type OutputFormat,
   type RecordingSettings,
   type ScrollSpeed,
-  type Viewport,
 } from "@/lib/recording";
 
 export const Route = createFileRoute("/_authenticated/studio")({
@@ -86,7 +84,6 @@ function Studio() {
 
   const check = useMemo(() => toHomepageUrl(url), [url]);
   const estimate = estimateTypicalDuration(settings);
-  const out = OUTPUT_SIZE[settings.format];
 
   const renderingJob = jobs.find((j) => j.status === "rendering") ?? null;
   const selectedJob = jobs.find((j) => j.id === selectedId) ?? null;
@@ -128,6 +125,23 @@ function Studio() {
       a.remove();
     } catch {
       toast.error("Couldn't get the download link. Please try again.");
+    }
+  };
+
+  const downloadFrame = async (job: RenderJob) => {
+    try {
+      const url = await signedVideoUrl(job, false);
+      const blob = await renderLaptopFramePng(url);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = laptopFrameFileName(job);
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't build the laptop frame. Please try again.");
     }
   };
 
@@ -220,18 +234,6 @@ function Studio() {
 
             <Step n={2} title="Record the homepage">
               <div className="grid gap-5">
-                <div>
-                  <FieldLabel>Viewport</FieldLabel>
-                  <Segmented<Viewport>
-                    label="Viewport"
-                    value={settings.viewport}
-                    onChange={(v) => update("viewport", v)}
-                    options={[
-                      { value: "desktop", label: <><Monitor className="size-4" /> Desktop</>, hint: "1440×900" },
-                      { value: "mobile", label: <><Smartphone className="size-4" /> Mobile</>, hint: "390×844" },
-                    ]}
-                  />
-                </div>
                 <div>
                   <FieldLabel>Scroll speed</FieldLabel>
                   <Segmented<ScrollSpeed>
