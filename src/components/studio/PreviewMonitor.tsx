@@ -170,6 +170,10 @@ export function PreviewMonitor({
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_60%)]" />
 
+          {job?.status === "completed" && videoUrl ? (
+            <LaptopLockup videoUrl={videoUrl} host={job.host} />
+          ) : (
+          <>
           {/* captured browser viewport */}
           <div
             className={cn(
@@ -221,20 +225,6 @@ export function PreviewMonitor({
             </div>
           </div>
 
-          {/* end-state overlays */}
-          {job?.status === "completed" && videoUrl && (
-            <video
-              key={videoUrl}
-              src={videoUrl}
-              controls
-              playsInline
-              autoPlay
-              muted
-              loop
-              aria-label={`Recording of ${job.host}`}
-              className="absolute inset-0 h-full w-full bg-background object-contain"
-            />
-          )}
           {job?.status === "completed" && !videoUrl && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
               <CheckCircle2 className="size-10 text-success" />
@@ -245,13 +235,6 @@ export function PreviewMonitor({
             </div>
           )}
           {job?.status === "failed" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80 p-6 text-center backdrop-blur-sm">
-              <TriangleAlert className="size-10 text-destructive" />
-              <p className="font-display text-lg font-semibold">Couldn't record this homepage</p>
-              <p className="max-w-xs text-sm text-muted-foreground">{job.error}</p>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* phase timeline */}
