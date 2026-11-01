@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Info, Link2, Monitor, Smartphone } from "lucide-react";
+import { ArrowRight, Info, Link2 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,19 +17,17 @@ import {
   useRenderJobs,
   type RenderJob,
 } from "@/hooks/use-render-jobs";
+import { laptopFrameFileName, renderLaptopFramePng } from "@/lib/laptop-frame";
 import {
   DEFAULT_SETTINGS,
-  OUTPUT_SIZE,
   PAUSE_MAX,
   PAUSE_MIN,
   PAUSE_STEP,
   clampPause,
   estimateTypicalDuration,
   toHomepageUrl,
-  type OutputFormat,
   type RecordingSettings,
   type ScrollSpeed,
-  type Viewport,
 } from "@/lib/recording";
 
 export const Route = createFileRoute("/_authenticated/studio")({
@@ -86,7 +84,6 @@ function Studio() {
 
   const check = useMemo(() => toHomepageUrl(url), [url]);
   const estimate = estimateTypicalDuration(settings);
-  const out = OUTPUT_SIZE[settings.format];
 
   const renderingJob = jobs.find((j) => j.status === "rendering") ?? null;
   const selectedJob = jobs.find((j) => j.id === selectedId) ?? null;
@@ -128,6 +125,23 @@ function Studio() {
       a.remove();
     } catch {
       toast.error("Couldn't get the download link. Please try again.");
+    }
+  };
+
+  const downloadFrame = async (job: RenderJob) => {
+    try {
+      const url = await signedVideoUrl(job, false);
+      const blob = await renderLaptopFramePng(url);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = laptopFrameFileName(job);
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't build the laptop frame. Please try again.");
     }
   };
 
@@ -221,18 +235,6 @@ function Studio() {
             <Step n={2} title="Record the homepage">
               <div className="grid gap-5">
                 <div>
-                  <FieldLabel>Viewport</FieldLabel>
-                  <Segmented<Viewport>
-                    label="Viewport"
-                    value={settings.viewport}
-                    onChange={(v) => update("viewport", v)}
-                    options={[
-                      { value: "desktop", label: <><Monitor className="size-4" /> Desktop</>, hint: "1440×900" },
-                      { value: "mobile", label: <><Smartphone className="size-4" /> Mobile</>, hint: "390×844" },
-                    ]}
-                  />
-                </div>
-                <div>
                   <FieldLabel>Scroll speed</FieldLabel>
                   <Segmented<ScrollSpeed>
                     label="Scroll speed"
@@ -271,16 +273,20 @@ function Studio() {
             </Step>
 
             <Step n={3} title="Export the video">
-              <FieldLabel>Format</FieldLabel>
-              <Segmented<OutputFormat>
-                label="Output format"
-                value={settings.format}
-                onChange={(v) => update("format", v)}
-                options={[
-                  { value: "9:16", label: "Vertical 9:16", hint: "Reels · TikTok" },
-                  { value: "16:9", label: "Widescreen 16:9", hint: "YouTube · web" },
-                ]}
-              />
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full border border-primary/60 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-primary">
+                  Widescreen 16:9
+                </span>
+                <span className="rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  1920×1080
+                </span>
+                <span className="rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Desktop 1440×900
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                One clean format — full-frame widescreen that drops straight into laptop mockups.
+              </p>
               <dl className="mt-4 grid grid-cols-3 gap-2 font-mono text-[11px]">
                 <div className="rounded-lg border p-2">
                   <dt className="text-muted-foreground">Length</dt>
@@ -288,9 +294,7 @@ function Studio() {
                 </div>
                 <div className="rounded-lg border p-2">
                   <dt className="text-muted-foreground">Size</dt>
-                  <dd className="mt-0.5 text-sm text-foreground">
-                    {out.width}×{out.height}
-                  </dd>
+                  <dd className="mt-0.5 text-sm text-foreground">1920×1080</dd>
                 </div>
                 <div className="rounded-lg border p-2">
                   <dt className="text-muted-foreground">File</dt>
@@ -331,6 +335,7 @@ function Studio() {
                 selectedId={monitorJob?.id ?? null}
                 onSelect={setSelectedId}
                 onDownload={download}
+                onFrameDownload={downloadFrame}
                 onRetry={async (job) => {
                   try {
                     setSelectedId(await retry(job));
