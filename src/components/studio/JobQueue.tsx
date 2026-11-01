@@ -1,4 +1,4 @@
-import { Download, Loader2, Monitor, RotateCcw, Smartphone, X } from "lucide-react";
+import { Download, Laptop, Loader2, Monitor, RotateCcw, Smartphone, X } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ export function JobQueue({
   onRetry,
   onRemove,
   onDownload,
+  onFrameDownload,
 }: {
   jobs: RenderJob[];
   selectedId: string | null;
@@ -34,6 +35,7 @@ export function JobQueue({
   onRetry: (job: RenderJob) => void;
   onRemove: (job: RenderJob) => void;
   onDownload: (job: RenderJob) => Promise<void>;
+  onFrameDownload: (job: RenderJob) => Promise<void>;
 }) {
   const [downloading, setDownloading] = useState<string | null>(null);
   if (jobs.length === 0) {
@@ -113,6 +115,27 @@ export function JobQueue({
 
               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 {job.status === "completed" && job.videoPath && (
+                  <>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={downloading === `${job.id}:frame`}
+                    onClick={async () => {
+                      setDownloading(`${job.id}:frame`);
+                      try {
+                        await onFrameDownload(job);
+                      } finally {
+                        setDownloading(null);
+                      }
+                    }}
+                  >
+                    {downloading === `${job.id}:frame` ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <Laptop />
+                    )}{" "}
+                    Laptop frame
+                  </Button>
                   <Button
                     size="sm"
                     disabled={downloading === job.id}
@@ -127,6 +150,7 @@ export function JobQueue({
                   >
                     {downloading === job.id ? <Loader2 className="animate-spin" /> : <Download />} Download MP4
                   </Button>
+                </>
                 )}
                 {job.status === "failed" && (
                   <Button size="sm" variant="secondary" onClick={() => onRetry(job)}>

@@ -335,6 +335,7 @@ function Studio() {
                 selectedId={monitorJob?.id ?? null}
                 onSelect={setSelectedId}
                 onDownload={download}
+                onFrameDownload={downloadFrame}
                 onRetry={async (job) => {
                   try {
                     setSelectedId(await retry(job));
