@@ -84,7 +84,7 @@ export function JobQueue({
                   </span>
                   <span>{job.settings.format}</span>
                   <span>{job.settings.scrollSpeed} scroll</span>
-                  <span>{job.settings.pauseSeconds}s pauses</span>
+                  {job.settings.pauseSeconds > 0 && <span>Legacy recording</span>}
                   <span>
                     {job.durationSeconds != null ? `${job.durationSeconds}s` : `~${job.estimatedSeconds}s`}
                   </span>

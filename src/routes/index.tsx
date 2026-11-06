@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Clapperboard, Monitor, Smartphone, Sparkles } from "lucide-react";
 
 import { AccountMenu } from "@/components/auth/AccountMenu";
+import { LegalFooter } from "@/components/legal/LegalFooter";
 import { MotionLink } from "@/components/landing/MotionLink";
 import { useSessionUser } from "@/lib/session";
 
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Paste a link and Preview Studio records a public homepage as a polished scroll-through MP4 — vertical 9:16 or widescreen 16:9. It all runs in the cloud, no laptop power needed.",
+           "Preview Studio records a public homepage as a continuous desktop scroll-through MP4 at 1920×1080, with a clean laptop mockup export.",
       },
       {
         property: "og:title",
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Paste a link and Preview Studio records a public homepage as a polished scroll-through MP4 — vertical 9:16 or widescreen 16:9.",
+           "Record public homepages as continuous 1920×1080 desktop videos and clean laptop mockups.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -38,12 +39,12 @@ const BENEFITS = [
   {
     icon: Monitor,
     title: "Pick your frame",
-    body: "Record the desktop view or the phone view — one site, both feeds covered.",
+    body: "A native 1920×1080 desktop view, ready for laptop mockups and widescreen video.",
   },
   {
     icon: Sparkles,
     title: "Motion gets time to play",
-    body: "The hero holds and every section pauses, so 3D scenes and animations finish on camera.",
+    body: "A brief opening hold, a steady sweep down the homepage, and a clean finish at the footer.",
   },
   {
     icon: Clapperboard,
@@ -144,11 +145,7 @@ function Landing() {
         </section>
       </main>
 
-      <footer className="border-t py-6">
-        <p className="mx-auto max-w-6xl px-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:px-6">
-          Deewhy HQ · Preview Studio · homepage recordings only
-        </p>
-      </footer>
+      <LegalFooter />
     </div>
   );
 }

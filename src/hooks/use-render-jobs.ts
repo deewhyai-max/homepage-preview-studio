@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import {
+  DEFAULT_SETTINGS,
   estimateTypicalDuration,
   type JobStatus,
   type OutputFormat,
@@ -182,7 +183,7 @@ export function useRenderJobs() {
 
   const retry = useCallback(
     async (job: RenderJob) => {
-      const id = await enqueue(job.homepage, job.host, job.settings);
+      const id = await enqueue(job.homepage, job.host, { ...DEFAULT_SETTINGS, scrollSpeed: job.settings.scrollSpeed });
       await removeJob(job).catch(() => undefined);
       return id;
     },
