@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Link2 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { LegalFooter } from "@/components/legal/LegalFooter";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -300,6 +301,7 @@ function AuthPage() {
             </>
           )}
         </div>
+        <div className="mt-8"><LegalFooter /></div>
       </div>
     </div>
   );

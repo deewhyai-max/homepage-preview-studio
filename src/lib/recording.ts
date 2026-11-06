@@ -13,10 +13,11 @@ export interface RecordingSettings {
   format: OutputFormat;
 }
 
-export const PAUSE_MIN = 2;
+export const PAUSE_MIN = 0;
 export const PAUSE_MAX = 3;
 export const PAUSE_STEP = 0.5;
-export const HERO_HOLD_SECONDS = 2.5;
+export const HERO_HOLD_SECONDS = 1.5;
+export const BOTTOM_HOLD_SECONDS = 1;
 
 export const SCROLL_SPEED_PX_PER_SEC: Record<ScrollSpeed, number> = {
   slow: 250,
@@ -25,7 +26,7 @@ export const SCROLL_SPEED_PX_PER_SEC: Record<ScrollSpeed, number> = {
 };
 
 export const VIEWPORT_SIZE: Record<Viewport, { width: number; height: number }> = {
-  desktop: { width: 1440, height: 900 },
+  desktop: { width: 1920, height: 1080 },
   mobile: { width: 390, height: 844 },
 };
 
@@ -46,7 +47,7 @@ export const ONLY_FORMAT: OutputFormat = "16:9";
 
 export const DEFAULT_SETTINGS: RecordingSettings = {
   scrollSpeed: "normal",
-  pauseSeconds: 2.5,
+  pauseSeconds: 0,
   viewport: ONLY_VIEWPORT,
   format: ONLY_FORMAT,
 };
@@ -102,17 +103,19 @@ export function toHomepageUrl(input: string): HomepageCheck {
   return { ok: true, homepage: `${url.protocol}//${url.host}/`, host: url.host, trimmedPath };
 }
 
-/** Video length: hero hold + scroll travel at the chosen speed + a pause per section. */
+/** Video length follows the exact capture plan, including the travel safety cap. */
 export function estimateDurationSeconds(opts: {
   pageHeightPx: number;
   viewportHeightPx: number;
   sections: number;
   settings: Pick<RecordingSettings, "scrollSpeed" | "pauseSeconds">;
 }): number {
-  const travel = Math.max(0, opts.pageHeightPx - opts.viewportHeightPx);
-  const scroll = travel / SCROLL_SPEED_PX_PER_SEC[opts.settings.scrollSpeed];
-  const pauses = Math.max(0, opts.sections) * clampPause(opts.settings.pauseSeconds);
-  return Math.round((HERO_HOLD_SECONDS + scroll + pauses) * 10) / 10;
+  return Math.round(planDurationSeconds(planScroll({
+    pageHeightPx: opts.pageHeightPx,
+    viewportHeightPx: opts.viewportHeightPx,
+    sectionTops: [],
+    settings: opts.settings,
+  })) * 10) / 10;
 }
 
 export function estimateTypicalDuration(settings: RecordingSettings): number {
@@ -130,7 +133,7 @@ export const RENDER_PHASES = [
   { key: "settle", label: "Waiting for hero animations to settle", weight: 0.08 },
   { key: "prescan", label: "Pre-scroll pass — loading lazy content", weight: 0.16 },
   { key: "hero", label: "Recording · holding the hero", weight: 0.08 },
-  { key: "scroll", label: "Recording · scrolling sections", weight: 0.42 },
+  { key: "scroll", label: "Recording · scrolling homepage", weight: 0.42 },
   { key: "encode", label: "Encoding MP4", weight: 0.1 },
 ] as const;
 
@@ -234,7 +237,7 @@ export function normalizeStops(opts: {
   return stops;
 }
 
-/** Hero hold, then scroll → pause for every section stop down to the bottom. */
+/** Standard continuous sweep; section pauses are retired, including for legacy jobs. */
 export function planScroll(opts: {
   pageHeightPx: number;
   viewportHeightPx: number;
@@ -242,17 +245,12 @@ export function planScroll(opts: {
   settings: Pick<RecordingSettings, "scrollSpeed" | "pauseSeconds">;
 }): ScrollStep[] {
   const maxScroll = Math.min(MAX_SCROLL_PX, Math.max(0, opts.pageHeightPx - opts.viewportHeightPx));
-  const pause = clampPause(opts.settings.pauseSeconds);
   const speed = SCROLL_SPEED_PX_PER_SEC[opts.settings.scrollSpeed];
   const steps: ScrollStep[] = [{ kind: "hold", at: 0, seconds: HERO_HOLD_SECONDS }];
-  let pos = 0;
-  const stops = normalizeStops({ sectionTops: opts.sectionTops, maxScroll, viewportHeightPx: opts.viewportHeightPx });
-  for (const stop of stops) {
-    const seconds = Math.round(((stop - pos) / speed) * 1000) / 1000;
-    steps.push({ kind: "scroll", from: pos, to: stop, seconds });
-    steps.push({ kind: "hold", at: stop, seconds: pause });
-    pos = stop;
+  if (maxScroll > 0) {
+    steps.push({ kind: "scroll", from: 0, to: maxScroll, seconds: Math.round((maxScroll / speed) * 1000) / 1000 });
   }
+  steps.push({ kind: "hold", at: maxScroll, seconds: BOTTOM_HOLD_SECONDS });
   return steps;
 }
 

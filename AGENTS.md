@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Project rules
-- The animated marketing landing lives at `src/routes/index.tsx` (scenes in `src/components/landing/`); the studio UI lives at `src/routes/studio.tsx` — keep them separate routes.
+- The animated marketing landing and authenticated Studio remain separate routes; public legal pages use a shared legal layout and footer so policy navigation stays consistent.
 - Recording rules (pause range, scroll speeds, output sizes, homepage-only URL reduction, length estimate) live as pure functions in `src/lib/recording.ts` with tests beside them; the UI and the future render backend must both use them so behavior stays in one place.
-- Render jobs are currently simulated client-side in `src/hooks/use-render-queue.ts` (prototype); the real cloud-browser recorder will replace that hook with server-created jobs and status polling, keeping the same Queued → Rendering → Completed/Failed states.
+- Render jobs are database-backed in `src/hooks/use-render-jobs.ts`; the worker consumes shared recording rules so new and retried jobs use consistent capture behavior.
 - The recorder worker (`worker/`) captures via CDP screencast with per-frame timestamps and encodes with an ffconcat timeline; it authenticates only with `WORKER_TOKEN` against `/api/public/worker/*` and never holds database keys — keeps credentials out of the self-hosted box.

@@ -17,6 +17,7 @@ export const Route = createFileRoute("/reset-password")({
         content: "Set a new password for your Deewhy HQ Preview Studio account.",
       },
       { property: "og:title", content: "Set a new password — Deewhy HQ Preview Studio" },
+      { property: "og:description", content: "Securely reset your Deewhy HQ Preview Studio account password." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

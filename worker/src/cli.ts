@@ -1,7 +1,7 @@
 // Local test: npm run record -- https://example.org out.mp4 [--mobile] [--vertical] [--speed fast] [--pause 2]
 import path from "node:path";
 
-import { toHomepageUrl, type ScrollSpeed } from "../../src/lib/recording.ts";
+import { DEFAULT_SETTINGS, toHomepageUrl, type ScrollSpeed } from "../../src/lib/recording.ts";
 import { toJobError } from "./errors.ts";
 import { recordHomepage } from "./recorder.ts";
 
@@ -23,7 +23,7 @@ try {
   const r = await recordHomepage({
     url: check.homepage,
     scrollSpeed: (opt("speed") as ScrollSpeed) ?? "normal",
-    pauseSeconds: Number(opt("pause") ?? 2.5),
+    pauseSeconds: DEFAULT_SETTINGS.pauseSeconds,
     viewport: flag("mobile") ? "mobile" : "desktop",
     format: flag("vertical") ? "9:16" : "16:9",
     outPath: out,

@@ -5,12 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { AccountMenu } from "@/components/auth/AccountMenu";
+import { LegalFooter } from "@/components/legal/LegalFooter";
 import { JobQueue } from "@/components/studio/JobQueue";
 import { PreviewMonitor } from "@/components/studio/PreviewMonitor";
 import { Segmented } from "@/components/studio/Segmented";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import {
   friendlyJobError,
   signedVideoUrl,
@@ -20,10 +20,6 @@ import {
 import { laptopFrameFileName, renderLaptopFramePng } from "@/lib/laptop-frame";
 import {
   DEFAULT_SETTINGS,
-  PAUSE_MAX,
-  PAUSE_MIN,
-  PAUSE_STEP,
-  clampPause,
   estimateTypicalDuration,
   toHomepageUrl,
   type RecordingSettings,
@@ -37,13 +33,13 @@ export const Route = createFileRoute("/_authenticated/studio")({
       {
         name: "description",
         content:
-          "Paste a website link, set the scroll speed and section pauses, and queue your homepage recording as a scroll-through MP4.",
+          "Record a homepage with continuous desktop scrolling and export a native 1920×1080 MP4 or laptop mockup.",
       },
       { property: "og:title", content: "The Studio — Deewhy HQ Preview Studio" },
       {
         property: "og:description",
         content:
-          "Paste a website link, set the scroll speed and section pauses, and queue your homepage recording as a scroll-through MP4.",
+          "Record a homepage with continuous desktop scrolling and export a native 1920×1080 MP4 or laptop mockup.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -180,8 +176,7 @@ function Studio() {
             Turn any homepage into a <span className="text-primary">scroll-through</span> video.
           </h1>
           <p className="mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Paste a link, pick how it moves, and export an MP4 — the hero holds, each section
-            pauses, and animations get time to play.
+            Clean desktop recordings. Full HD, from the first screen to the footer.
           </p>
         </div>
 
@@ -247,23 +242,6 @@ function Studio() {
                     ]}
                   />
                 </div>
-                <div>
-                  <FieldLabel aside={<span className="text-foreground">{settings.pauseSeconds.toFixed(1)}s</span>}>
-                    Pause per section
-                  </FieldLabel>
-                  <Slider
-                    aria-label="Pause per section in seconds"
-                    min={PAUSE_MIN}
-                    max={PAUSE_MAX}
-                    step={PAUSE_STEP}
-                    value={[settings.pauseSeconds]}
-                    onValueChange={(vals) => update("pauseSeconds", clampPause(vals[0] ?? PAUSE_MIN))}
-                  />
-                  <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted-foreground">
-                    <span>{PAUSE_MIN}s</span>
-                    <span>{PAUSE_MAX}s</span>
-                  </div>
-                </div>
                 <p className="flex gap-2 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
                   <Info className="mt-0.5 size-3.5 shrink-0" />
                   Before recording, the browser does a quick pass down the page so lazy-loaded
@@ -281,7 +259,7 @@ function Studio() {
                   1920×1080
                 </span>
                 <span className="rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Desktop 1440×900
+                  Desktop 1920×1080
                 </span>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
@@ -356,6 +334,7 @@ function Studio() {
           </div>
         </div>
       </main>
+      <LegalFooter />
     </div>
   );
 }

@@ -263,10 +263,11 @@ async function captureWhile(
   // Timeline from start→end; the last frame before start opens the video.
   const before = raw.filter((f) => f.ts <= start);
   const during = raw.filter((f) => f.ts > start && f.ts <= end);
-  const seq = [{ file: before.length ? before[before.length - 1]!.file : seed, ts: start }, ...during];
+  const seq = [{ file: before.at(-1)?.file ?? seed, ts: start }, ...during];
   const out: TimedFrame[] = [];
   for (let i = 0; i < seq.length; i++) {
-    const cur = seq[i]!;
+    const cur = seq[i];
+    if (!cur) continue;
     const next = seq[i + 1]?.ts ?? end;
     const d = Math.max(0, next - cur.ts);
     if (d > 0) out.push({ file: cur.file, duration: d });

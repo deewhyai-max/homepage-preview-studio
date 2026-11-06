@@ -162,7 +162,6 @@ export const PAGE_HELPERS = String.raw`
       return { pageHeight: this.max() + innerHeight, viewportHeight: innerHeight, sectionTops: tops };
     },
     async runPlan(steps) {
-      const ease = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
       hideConsent(); // banners that only appeared during the pre-scroll
       this.to(0);
       for (const s of steps) {
@@ -175,7 +174,7 @@ export const PAGE_HELPERS = String.raw`
         }
         for (;;) {
           const t = Math.min(1, (performance.now() - start) / dur);
-          this.to(s.from + (s.to - s.from) * ease(t));
+          this.to(s.from + (s.to - s.from) * t);
           if (t >= 1) break;
           await raf();
         }
