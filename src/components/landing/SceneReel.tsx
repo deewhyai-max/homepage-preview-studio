@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 const STEPS = [
   { icon: Link2, tag: "01 · Paste a link", headline: "Point at any homepage.", body: "Drop in a public website address. We only ever film the homepage." },
   { icon: Cloud, tag: "02 · Cloud browser", headline: "No laptop power needed.", body: "A powerful cloud browser loads the site, so even an old machine works." },
-  { icon: PauseCircle, tag: "03 · Hero holds, sections pause", headline: "Every section gets its moment.", body: "Smooth scrolling with 2–3 second pauses to catch animations and 3D." },
-  { icon: Clapperboard, tag: "04 · Export the MP4", headline: "9:16 or 16:9, ready to post.", body: "Download and upload straight to TikTok, Reels or YouTube." },
+  { icon: PauseCircle, tag: "03 · Continuous scroll", headline: "One steady sweep.", body: "A brief hero hold, continuous scrolling, and a clean finish at the footer." },
+  { icon: Clapperboard, tag: "04 · Export the MP4", headline: "Full HD, ready for your laptop.", body: "Native 1920×1080 desktop video and a clean laptop-frame image." },
 ] as const;
 
 /** Glass card that snaps in when on screen and dissolves when it leaves — both directions. */

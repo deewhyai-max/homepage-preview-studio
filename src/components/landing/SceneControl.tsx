@@ -13,8 +13,8 @@ const CARDS = [
   },
   {
     icon: Pause,
-    title: "Section pauses",
-    body: "2–3 seconds per section — 3D scenes and lazy images finish before the camera moves on.",
+    title: "Continuous scroll",
+    body: "One steady sweep from the opening screen to the footer, without section stops.",
   },
   {
     icon: Gauge,
@@ -29,7 +29,7 @@ const CARDS = [
   {
     icon: FileVideo,
     title: "Clean MP4",
-    body: "1080p export — vertical for Reels and TikTok, widescreen for YouTube and the web.",
+    body: "Native 1920×1080 widescreen export for presentations, laptop mockups and the web.",
   },
 ] as const;
 
@@ -127,9 +127,9 @@ export function SceneControl() {
         <div className="mx-auto w-full max-w-6xl">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <ScrubStat value={Math.round(6 * eased)} label="Sections on camera" />
-            <ScrubStat value={2.5 * eased} decimals={1} label="Seconds paused per section" />
-            <ScrubStat value={Math.round(2 * eased)} label="Output formats" />
-            <ScrubStat value={Math.round(1080 * eased)} label="Pixels tall, vertical export" />
+            <ScrubStat value={1.5 * eased} decimals={1} label="Seconds holding the hero" />
+            <ScrubStat value={Math.round(1920 * eased)} label="Pixels wide" />
+            <ScrubStat value={Math.round(1080 * eased)} label="Pixels tall" />
           </div>
           <div className="mt-4 flex items-center justify-between rounded-xl border bg-monitor px-4 py-3">
             <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

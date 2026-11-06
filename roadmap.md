@@ -6,7 +6,7 @@
 - [x] Download + in-app playback of finished MP4s
 - [x] Shared worker token secret
 - [x] Deploy worker to Google Cloud Run (user completed deployment)
-- [ ] Native 1920×1080 desktop capture and continuous standard scroll
-- [ ] Public Terms of Service and Privacy Policy pages with navigation links
+- [x] Native 1920×1080 desktop capture and continuous standard scroll
+- [x] Public Terms of Service and Privacy Policy pages with navigation links
 - [ ] Redeploy updated worker on Google Cloud Run (user's hosting account)
 - [ ] Ads (later — user will decide network)
