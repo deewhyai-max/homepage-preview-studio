@@ -4,9 +4,9 @@ import {
   DEFAULT_SETTINGS,
   MAX_ACTIVE_JOBS,
   OUTPUT_SIZE,
+  VIEWPORT_SIZE,
   clampPause,
   estimateDurationSeconds,
-  normalizeStops,
   planDurationSeconds,
   planScroll,
   progressFor,
@@ -18,18 +18,14 @@ describe("export lock", () => {
     expect(DEFAULT_SETTINGS.viewport).toBe("desktop");
     expect(DEFAULT_SETTINGS.format).toBe("16:9");
     expect(OUTPUT_SIZE["16:9"]).toEqual({ width: 1920, height: 1080 });
+    expect(VIEWPORT_SIZE.desktop).toEqual({ width: 1920, height: 1080 });
   });
 });
 
-describe("section pauses", () => {
-  it("never goes below 2 seconds", () => {
-    expect(clampPause(1)).toBe(2);
-  });
-  it("never goes above 3 seconds", () => {
-    expect(clampPause(5)).toBe(3);
-  });
-  it("keeps values inside the 2–3 second range", () => {
-    expect(clampPause(2.5)).toBe(2.5);
+describe("continuous defaults", () => {
+  it("defaults to zero section pauses", () => {
+    expect(DEFAULT_SETTINGS.pauseSeconds).toBe(0);
+    expect(clampPause(-1)).toBe(0);
   });
 });
 
@@ -59,68 +55,35 @@ describe("export formats", () => {
   });
 });
 
-describe("video length estimate", () => {
-  it("adds hero hold, scroll travel and one pause per section", () => {
-    // 2.5s hero + (2900-900)/500 = 4s scroll + 4 × 2s pauses = 14.5s
-    expect(
-      estimateDurationSeconds({
-        pageHeightPx: 2900,
-        viewportHeightPx: 900,
-        sections: 4,
-        settings: { scrollSpeed: "normal", pauseSeconds: 2 },
-      }),
-    ).toBe(14.5);
+describe("standard scroll", () => {
+  const settings = { scrollSpeed: "normal" as const, pauseSeconds: 0 };
+  it("holds the hero for 1.5 seconds", () => {
+    expect(planScroll({ pageHeightPx: 6200, viewportHeightPx: 1080, sectionTops: [], settings })[0]).toEqual({ kind: "hold", at: 0, seconds: 1.5 });
   });
-});
-
-describe("scroll choreography", () => {
-  const settings = { scrollSpeed: "normal" as const, pauseSeconds: 2 };
-
-  it("holds the hero first, then pauses at each section and ends at the bottom", () => {
-    const steps = planScroll({ pageHeightPx: 3900, viewportHeightPx: 900, sectionTops: [0, 1000, 2000], settings });
-    expect(steps).toEqual([
-      { kind: "hold", at: 0, seconds: 2.5 },
-      { kind: "scroll", from: 0, to: 1000, seconds: 2 },
-      { kind: "hold", at: 1000, seconds: 2 },
-      { kind: "scroll", from: 1000, to: 2000, seconds: 2 },
-      { kind: "hold", at: 2000, seconds: 2 },
-      { kind: "scroll", from: 2000, to: 3000, seconds: 2 },
-      { kind: "hold", at: 3000, seconds: 2 },
-    ]);
-    expect(planDurationSeconds(steps)).toBe(14.5);
+  it("uses a single uninterrupted sweep regardless of section boundaries or legacy pauses", () => {
+    const steps = planScroll({ pageHeightPx: 6200, viewportHeightPx: 1080, sectionTops: [1500, 3000, 4500], settings: { ...settings, pauseSeconds: 2.5 } });
+    expect(steps.filter((s) => s.kind === "scroll")).toEqual([{ kind: "scroll", from: 0, to: 5120, seconds: 10.24 }]);
+    expect(steps).toHaveLength(3);
   });
-
-  it("uses the chosen pause, kept inside 2–3 seconds", () => {
-    const steps = planScroll({
-      pageHeightPx: 2000,
-      viewportHeightPx: 900,
-      sectionTops: [],
-      settings: { scrollSpeed: "fast", pauseSeconds: 9 },
-    });
-    expect(steps.filter((s) => s.kind === "hold").slice(1).every((s) => s.seconds === 3)).toBe(true);
+  it("holds at the footer for 1 second", () => {
+    expect(planScroll({ pageHeightPx: 6200, viewportHeightPx: 1080, sectionTops: [], settings }).at(-1)).toEqual({ kind: "hold", at: 5120, seconds: 1 });
   });
-
-  it("merges sections that are closer than 60% of a screen", () => {
-    expect(normalizeStops({ sectionTops: [1000, 1200, 2500], maxScroll: 4000, viewportHeightPx: 1000 })).toEqual([
-      1000, 2500, 4000,
-    ]);
+  it("estimates the typical normal recording including both holds", () => {
+    expect(estimateDurationSeconds({ pageHeightPx: 6200, viewportHeightPx: 1080, sections: 6, settings })).toBe(12.7);
   });
-
-  it("never pauses more than 8 times on long pages", () => {
-    const tops = Array.from({ length: 30 }, (_, i) => (i + 1) * 1000);
-    expect(normalizeStops({ sectionTops: tops, maxScroll: 30_000, viewportHeightPx: 900 }).length).toBe(8);
+  it("keeps selected scroll speeds", () => {
+    const plan = (scrollSpeed: "slow" | "normal" | "fast") => planScroll({ pageHeightPx: 6080, viewportHeightPx: 1080, sectionTops: [], settings: { ...settings, scrollSpeed } })[1];
+    expect(plan("slow")).toEqual({ kind: "scroll", from: 0, to: 5000, seconds: 20 });
+    expect(plan("normal")).toEqual({ kind: "scroll", from: 0, to: 5000, seconds: 10 });
+    expect(plan("fast")).toEqual({ kind: "scroll", from: 0, to: 5000, seconds: 5.556 });
   });
-
-  it("stops recording after 20,000px of scrolling", () => {
-    const steps = planScroll({ pageHeightPx: 90_000, viewportHeightPx: 900, sectionTops: [], settings });
-    const last = steps[steps.length - 1];
-    expect(last).toEqual({ kind: "hold", at: 20_000, seconds: 2 });
+  it("retains the 20,000px infinite-feed safety cap", () => {
+    expect(planScroll({ pageHeightPx: 90000, viewportHeightPx: 1080, sectionTops: [], settings }).at(-1)).toEqual({ kind: "hold", at: 20000, seconds: 1 });
   });
-
-  it("a page that fits on one screen only holds the hero", () => {
-    expect(planScroll({ pageHeightPx: 800, viewportHeightPx: 900, sectionTops: [], settings })).toEqual([
-      { kind: "hold", at: 0, seconds: 2.5 },
-    ]);
+  it("holds a one-screen page without scrolling", () => {
+    const steps = planScroll({ pageHeightPx: 800, viewportHeightPx: 1080, sectionTops: [], settings });
+    expect(steps).toEqual([{ kind: "hold", at: 0, seconds: 1.5 }, { kind: "hold", at: 0, seconds: 1 }]);
+    expect(planDurationSeconds(steps)).toBe(2.5);
   });
 });
 
